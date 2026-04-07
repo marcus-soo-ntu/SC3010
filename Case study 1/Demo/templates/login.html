@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel">
+    <div class="panel-header">
+        <div>
+            <p class="eyebrow">Authentication</p>
+            <h2>Login page</h2>
+        </div>
+        <span class="badge {{ mode }}">{{ mode|capitalize }} mode</span>
+    </div>
+
+    <form method="get" class="form-card" style="margin-bottom: 1rem;">
+        <label>
+            Mode
+            <select name="mode" onchange="window.location.href = '{{ url_for('login') }}?mode=' + this.value">
+                <option value="vulnerable" {% if mode == 'vulnerable' %}selected{% endif %}>Vulnerable Mode</option>
+                <option value="secure" {% if mode == 'secure' %}selected{% endif %}>Secure Mode</option>
+            </select>
+        </label>
+    </form>
+
+    <form method="post" class="form-card">
+        <input type="hidden" name="mode" value="{{ mode }}">
+
+        <label>
+            Username
+            <input type="text" name="username" placeholder="alice" required>
+        </label>
+
+        <label>
+            Password
+            <input type="password" name="password" placeholder="wonderland" required>
+        </label>
+
+        <button type="submit">Run login query</button>
+    </form>
+
+    <div class="explain">
+        <p><strong>Vulnerable:</strong> the SQL statement is built with string concatenation, so crafted input can change the WHERE clause.</p>
+        <p><strong>Secure:</strong> placeholders keep user input separate from the SQL statement.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert error">{{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+    <div class="result-box">
+        <h3>Query result</h3>
+        <p><strong>User ID:</strong> {{ result['id'] }}</p>
+        <p><strong>Username:</strong> {{ result['username'] }}</p>
+        <p><strong>Role:</strong> {{ result['role'] }}</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Recent executed queries</h3>
+        {% if query_logs %}
+        <form method="post" action="{{ url_for('clear_logs') }}" style="margin: 0;">
+            <button type="submit" style="background: #9f1239; padding: 0.5rem 1rem; border-radius: 0.5rem; color: white; border: none; font-weight: 700; cursor: pointer;">Clear logs</button>
+        </form>
+        {% endif %}
+    </div>
+    <div class="log-list">
+        {% for log in query_logs %}
+        <article class="log-entry">
+            <div class="log-meta">
+                <span class="badge {{ log['mode'] }}">{{ log['mode']|capitalize }}</span>
+                <span>{{ log['action'] }} · {{ log['created_at'] }}</span>
+                <span>Rows: {{ log['result_count'] }}</span>
+            </div>
+            <code>{{ log['sql_text'] }}</code>
+            <p>{{ log['note'] }}</p>
+        </article>
+        {% else %}
+        <p>No queries have been executed yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

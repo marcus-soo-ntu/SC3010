@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel hero">
+    <div>
+        <h2>Learn how SQL injection happens</h2>
+        <p>This demo keeps the workflow simple: try the vulnerable mode, then switch to secure mode and compare the executed queries.</p>
+    </div>
+    <div class="mode-card">
+        <h3>Choose a page</h3>
+        <p>Use the login form to test authentication and the search page to inspect filtered database results.</p>
+        <div class="button-row">
+            <a class="button" href="{{ url_for('login') }}?mode=vulnerable">Vulnerable Login</a>
+            <a class="button secondary" href="{{ url_for('login') }}?mode=secure">Secure Login</a>
+            <a class="button" href="{{ url_for('search') }}?mode=vulnerable">Vulnerable Search</a>
+            <a class="button secondary" href="{{ url_for('search') }}?mode=secure">Secure Search</a>
+        </div>
+    </div>
+</section>
+
+<section class="panel grid-2">
+    <article>
+        <h3>Vulnerable mode</h3>
+        <p>Builds SQL by inserting raw user input directly into the query string. That makes the SQL logic editable by the input text.</p>
+        <p class="note">Example idea: a crafted login value can change the WHERE clause and bypass authentication.</p>
+    </article>
+    <article>
+        <h3>Secure mode</h3>
+        <p>Uses prepared statements with placeholders so the database treats user input as data instead of executable SQL.</p>
+        <p class="note">This is the pattern you should use in real applications.</p>
+    </article>
+</section>
+{% endblock %}

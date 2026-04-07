@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or 'SQL Injection Demo' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">SC3010 Case Study 1</p>
+            <h1>SQL Injection Demo</h1>
+            <p class="lede">A local teaching app that contrasts unsafe string-concatenated SQL with parameterized queries.</p>
+        </div>
+        <nav class="nav">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('login') }}?mode=secure">Login</a>
+            <a href="{{ url_for('search') }}?mode=secure">Search</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>Local educational use only.</p>
+    </footer>
+</body>
+</html>
