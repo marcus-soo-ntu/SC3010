@@ -1,0 +1,89 @@
+
+
+# 🛡️ Case Study 1 Summary: SQL Injection in FortiClient EMS (CVE-2026-21643)
+https://www.csoonline.com/article/4152117/fortinet-hit-by-another-exploited-cybersecurity-flaw.html
+
+## 📌 Overview
+
+A **critical SQL injection vulnerability (CVE-2026-21643)** was discovered in FortiClient EMS, a widely used endpoint management system. The flaw allows **unauthenticated attackers** to execute malicious SQL queries via specially crafted HTTP requests.
+
+---
+
+## ⚠️ Key Vulnerability Details
+
+* **Type:** SQL Injection
+* **Severity:** Critical
+* **Access required:** None (unauthenticated)
+* **Affected version:** 7.4.4 (multi-tenant mode only)
+* **Patched in:** 7.4.5
+
+👉 The vulnerability stems from:
+
+> Improper sanitization of user input in SQL queries
+
+---
+
+## 💥 Attack Impact
+
+Attackers can:
+
+* 🔓 Execute arbitrary SQL commands
+* 🔑 Steal **admin credentials**
+* 📊 Access **endpoint inventory data**
+* 📜 Extract **security policies and certificates**
+* 💻 Potentially achieve **remote code execution (RCE)**
+
+👉 All from a **single crafted HTTP request**
+
+---
+
+## 🌍 Scale of Exposure
+
+* ~2,400 internet-facing EMS instances identified
+* ~1,000 publicly exposed systems (via Shodan)
+* Actively exploited in the wild
+
+---
+
+## 🧠 Why it’s dangerous
+
+* No authentication required
+* No lockout protections
+* Returns database error messages (helps attackers)
+* Enables **full system compromise + lateral movement**
+
+---
+
+## 🔁 Broader Trend
+
+* This is **Fortinet’s 7th SQL injection vulnerability in 12 months**
+* Indicates:
+
+  * Repeated coding weaknesses
+  * Lack of deep codebase review
+* Attackers are increasingly targeting Fortinet products
+
+---
+
+## 🧩 Root Cause
+
+* Failure to properly sanitize user input
+* Lack of parameterized queries
+* Weak secure coding practices
+
+---
+
+## 🛡️ Mitigation & Recommendations
+
+* ✅ Upgrade to version 7.4.5 or later
+* 🚫 Remove EMS from public internet exposure
+* 🔐 Implement Zero Trust architecture
+* 🔍 Monitor logs for suspicious SQL patterns
+* 🧱 Use secure coding practices (e.g., prepared statements)
+
+---
+
+## 📚 Key Takeaway
+
+> SQL injection remains one of the most dangerous and persistent web vulnerabilities, capable of leading to **full system compromise, data exfiltration, and remote code execution**—even in modern enterprise security products.
+
