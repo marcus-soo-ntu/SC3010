@@ -189,39 +189,124 @@ def clear_logs():
 
 
 @app.route("/search", methods=["GET"])
-def search():
-    mode = normalize_mode(request.args.get("mode", "secure"))
+def search_vulnerable():
+    # HTTP query params map directly to backend variables via request.args.
     query_text = request.args.get("q", "").strip()
+    # Optional advanced demo: unsanitized custom header value used in SQL.
+    header_input = request.headers.get("X-User-Input", "").strip()
+    use_header = request.args.get("use_header", "0") == "1"
     results = []
+    error = None
+    header_demo_status = ""
+
+    app.logger.info("Raw HTTP input for /search | q=%r | X-User-Input=%r | use_header=%s", query_text, header_input, use_header)
 
     if query_text:
-        if mode == "vulnerable":
-            # Intentionally unsafe: search text is inserted directly into the SQL string.
-            sql_text = (
-                "SELECT id, name, category, price FROM products WHERE name LIKE '%"
-                + query_text
-                + "%' OR category LIKE '%"
-                + query_text
-                + "%'"
+        # FOR EDUCATIONAL PURPOSES ONLY (vulnerable):
+        # User-controlled HTTP input is concatenated into SQL text.
+        # Example malicious URL: /search?q=' OR '1'='1
+        # This can change query logic and return extra rows.
+        sql_text = (
+            "SELECT id, name, category, price FROM products WHERE name LIKE '%"
+            + query_text
+            + "%' OR category LIKE '%"
+            + query_text
+            + "%'"
+        )
+
+        if use_header and header_input:
+            sql_text += " OR category = '" + header_input + "'"
+            header_demo_status = "Advanced demo ON: X-User-Input header was concatenated into vulnerable SQL."
+        elif use_header:
+            header_demo_status = "Advanced demo ON but no X-User-Input header received. Use a client script (not browser form) to send it."
+
+        database = get_db()
+        try:
+            app.logger.info("Final SQL /search (vulnerable): %s", sql_text)
+            results = database.execute(sql_text).fetchall()
+            log_query(
+                "http_search",
+                "vulnerable",
+                sql_text,
+                {"q": query_text, "X-User-Input": header_input, "use_header": use_header},
+                len(results),
+                "Vulnerable HTTP Query Endpoint: query params and optional header are directly concatenated.",
             )
-            database = get_db()
-            try:
-                results = database.execute(sql_text).fetchall()
-                log_query("search", mode, sql_text, {"q": query_text}, len(results), "String concatenation allows the WHERE clause to be altered.")
-            except sqlite3.OperationalError as e:
-                results = []
-                log_query("search", mode, sql_text, {"q": query_text}, 0, f"Injection caused error: {str(e)}")
-        else:
-            sql_text = "SELECT id, name, category, price FROM products WHERE name LIKE ? OR category LIKE ?"
-            like_query = f"%{query_text}%"
-            database = get_db()
-            results = database.execute(sql_text, (like_query, like_query)).fetchall()
-            log_query("search", mode, sql_text, {"q": query_text}, len(results), "Prepared statements treat the search term as data.")
+        except sqlite3.OperationalError as exc:
+            error = f"SQL Error (expected with injection demos): {str(exc)}"
+            log_query(
+                "http_search",
+                "vulnerable",
+                sql_text,
+                {"q": query_text, "X-User-Input": header_input, "use_header": use_header},
+                0,
+                f"Injection caused error: {str(exc)}",
+            )
 
     return render_template(
         "search.html",
-        mode=mode,
+        mode="vulnerable",
+        endpoint_label="Vulnerable HTTP Query Endpoint",
+        submit_url=url_for("search_vulnerable"),
+        switch_url=url_for("search_secure"),
+        switch_label="Go To Secure HTTP Endpoint",
         query_text=query_text,
+        use_header=use_header,
+        header_input=header_input,
+        header_demo_status=header_demo_status,
+        error=error,
+        results=results,
+        query_logs=fetch_query_logs(),
+    )
+
+
+@app.route("/search_secure", methods=["GET"])
+def search_secure():
+    query_text = request.args.get("q", "").strip()
+    header_input = request.headers.get("X-User-Input", "").strip()
+    use_header = request.args.get("use_header", "0") == "1"
+    results = []
+    header_demo_status = ""
+
+    app.logger.info("Raw HTTP input for /search_secure | q=%r | X-User-Input=%r | use_header=%s", query_text, header_input, use_header)
+
+    if query_text:
+        # Secure version: input is always bound as data using placeholders.
+        sql_text = "SELECT id, name, category, price FROM products WHERE name LIKE ? OR category LIKE ?"
+        like_query = f"%{query_text}%"
+        params = [like_query, like_query]
+
+        if use_header and header_input:
+            sql_text += " OR category = ?"
+            params.append(header_input)
+            header_demo_status = "Advanced demo ON: X-User-Input header was bound as a parameter in secure SQL."
+        elif use_header:
+            header_demo_status = "Advanced demo ON but no X-User-Input header received. Use a client script (not browser form) to send it."
+
+        database = get_db()
+        app.logger.info("Final SQL /search_secure: %s | params=%s", sql_text, params)
+        results = database.execute(sql_text, tuple(params)).fetchall()
+        log_query(
+            "http_search",
+            "secure",
+            sql_text,
+            {"q": query_text, "X-User-Input": header_input, "use_header": use_header},
+            len(results),
+            "Secure HTTP endpoint uses parameterized queries; payload stays data.",
+        )
+
+    return render_template(
+        "search.html",
+        mode="secure",
+        endpoint_label="Secure HTTP Query Endpoint",
+        submit_url=url_for("search_secure"),
+        switch_url=url_for("search_vulnerable"),
+        switch_label="Go To Vulnerable HTTP Endpoint",
+        query_text=query_text,
+        use_header=use_header,
+        header_input=header_input,
+        header_demo_status=header_demo_status,
+        error=None,
         results=results,
         query_logs=fetch_query_logs(),
     )

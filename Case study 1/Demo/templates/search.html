@@ -4,34 +4,47 @@
     <div class="panel-header">
         <div>
             <p class="eyebrow">Database search</p>
-            <h2>Product search page</h2>
+            <h2>{{ endpoint_label }}</h2>
         </div>
         <span class="badge {{ mode }}">{{ mode|capitalize }} mode</span>
     </div>
 
-    <form class="form-card" style="margin-bottom: 1rem;">
-        <label>
-            Mode
-            <select name="mode" onchange="window.location.href = '{{ url_for('search') }}?mode=' + this.value">
-                <option value="vulnerable" {% if mode == 'vulnerable' %}selected{% endif %}>Vulnerable Mode</option>
-                <option value="secure" {% if mode == 'secure' %}selected{% endif %}>Secure Mode</option>
-            </select>
-        </label>
-    </form>
+    <div class="explain" style="margin-bottom: 1rem;">
+        <p><strong>Current route:</strong> {{ submit_url }}</p>
+        <p><strong>Toggle endpoint:</strong> <button><a href="{{ switch_url }}">{{ switch_label }}</a></button></p>
+    </div>
 
-    <form method="get" class="form-card">
-        <input type="hidden" name="mode" value="{{ mode }}">
+    <form method="get" action="{{ submit_url }}" class="form-card">
         <label>
             Search term
             <input type="text" name="q" placeholder="electronics" value="{{ query_text }}">
         </label>
+        <label>
+            Advanced demo (header-backed filter)
+            <select name="use_header">
+                <option value="0" {% if not use_header %}selected{% endif %}>Off</option>
+                <option value="1" {% if use_header %}selected{% endif %}>On</option>
+            </select>
+        </label>
+        <p class="note">To test the optional header injection path, send an HTTP header named <strong>X-User-Input</strong> from a client script. Standard browser form submissions cannot set custom headers.</p>
         <button type="submit">Run search query</button>
     </form>
 
+    {% if header_demo_status %}
     <div class="explain">
-        <p><strong>Vulnerable:</strong> the search term is concatenated into the SQL text, so the WHERE clause can be altered by the input.</p>
-        <p><strong>Secure:</strong> the same query uses placeholders and a bound parameter for the search term.</p>
+        <p><strong>{{ header_demo_status }}</strong></p>
     </div>
+    {% endif %}
+
+    <div class="explain">
+        <p><strong>Vulnerable endpoint (/search):</strong> query parameters and optional header input can be concatenated into SQL for educational purposes only.</p>
+        <p><strong>Secure endpoint (/search_secure):</strong> the same inputs are bound as parameters so input cannot rewrite SQL logic.</p>
+        <p class="note">Try: <code>/search?q=' OR '1'='1</code> and compare with <code>/search_secure?q=' OR '1'='1</code>.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert error">{{ error }}</div>
+    {% endif %}
 
     {% if query_text %}
     <div class="result-box">
