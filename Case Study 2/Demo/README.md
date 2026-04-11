@@ -1,4 +1,4 @@
-# Log4Shell Vulnerability Demo - Running Guide
+# Log4Shell Vulnerability Demo
 
 ## Overview
 
@@ -25,7 +25,7 @@ Log4j automatically interprets `${}` expressions in the logged message, demonstr
 ### Step 1: Navigate to the Demo Directory
 
 ```bash
-cd "c:\Programming\SC3010\Case Study 2\Demo"
+cd "SC3010\Case Study 2\Demo"
 ```
 
 ### Step 2: Build the Project with Maven
@@ -169,7 +169,3 @@ Check that log4j2.xml is in the classpath. When using Maven:
 mvn clean package
 java -jar target/log4shell-demo-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
-
-## Questions?
-
-For more information on Log4Shell, see the main **Log4Shell Case Study.md** document.
